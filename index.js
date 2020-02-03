@@ -48,8 +48,8 @@ function MiddleWareCheckTitle (req, res, next)  {
 
 function MiddleWareCheckProject (req, res, next)  {
   
-  const index = findIndex(req.params.id);
-  if(index == null) {
+  const project = findProjectById(req.params.id);
+  if(project == null) {
     return res.status(400).json({error : 'The PROJECT not exists!'});
   }
   return next();
@@ -60,21 +60,16 @@ function MiddleWareCheckProject (req, res, next)  {
  * Função para auxiliar na busca do registro
 */
 
-function findIndex(id) {
+function findProjectById(id) {
 
-  let index = null;
-  if(db.length > 0) {
-    index = 0;
-    for (const row of db) {
-      if(id == row.id){
-        break;
-      }
-      index++;
-    }
-  }
-  return index;
+  return db.find(p => p.id == id);
 }
 
+function deleteProjectById(id) {
+
+  index = db.findIndex(p => p.id == id);
+  db.splice(index, 1);
+}
 
 /*
  * Rotas.
@@ -99,9 +94,9 @@ server.put('/projects/:id', MiddleWareCheckId, MiddleWareCheckTitle, MiddleWareC
 
   const { id }   = req.params;
   const newTitle = req.body.title;
-  const index    = findIndex(id);
-  const project  = db[index];
+  const project  = findProjectById(id);
   const oldTitle = project.title;
+  project.title  =  newTitle;
 
   return res.status(200).json({sucess: `The project title (${oldTitle}) has been updated to (${newTitle})`});
 });
@@ -109,9 +104,8 @@ server.put('/projects/:id', MiddleWareCheckId, MiddleWareCheckTitle, MiddleWareC
 server.delete('/projects/:id', MiddleWareCheckId, MiddleWareCheckProject, (req, res) => {
 
   const { id } = req.params;
-  const index = findIndex(id);
-  const project = db[index];
-  db.splice(index, 1);
+  project = findProjectById(id);
+  deleteProjectById(id);
 
   return res.send(`The project (${project.title}) has been deleted.`);
 });
@@ -120,10 +114,10 @@ server.post('/projects/:id/tasks', MiddleWareCheckId, MiddleWareCheckProject, (r
 
   const { id } = req.params;
   const { title } = req.body;
-  const index = findIndex(id);
-  db[index].tasks.push(title);
+  project = findProjectById(id);
+  project.tasks.push(title);
 
   return res.status(200).json({sucess: 'The task has been added to the project'});
 });
 
-server.listen('3000');
+server.listen('3333');
